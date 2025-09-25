@@ -1,3 +1,25 @@
+"""
+A simple implementation of the Graph data structure.
+
+This module defines the `Graph` class, which provides:
+- Node management (add, delete, rename)
+- Edge management (add, remove, check, directed/undirected, weighted)
+- Graph information retrieval methods (degree, neighbors, nodes, edges)
+
+The graph is stored internally as an adjacency list:
+- A dictionary mapping each node name (str) to a set of (neighbor, weight) tuples.
+- Weights may be int, float, or None for unweighted edges.
+- By default, edges are undirected, but directed edges can also be added.
+
+TODO Algorithms built on this implementation:
+- Graph traversal: BFS (breadth-first search), DFS (depth-first search)
+- Pathfinding: Dijkstra's algorithm (weighted shortest paths)
+- Spanning tree: Prim's or Kruskal's algorithm for minimum spanning tree
+- Connectivity checks: is_connected, connected_components
+
+This implementation is intended for use in graph algorithms including traversal, shortest path, and minimum spanning tree.
+"""
+
 from typing import Union
 
 class Graph:
@@ -64,7 +86,7 @@ class Graph:
         #Error if node not present in graph
         raise ValueError(f"Node named {node_name} does not exist in graph.")
 
-    def get_neighbours(self, 
+    def get_neighbors(self, 
                        node_name:str) -> list:
         """
         Retrieves the adjacency list (list of neighbours) of a node in the graph.
