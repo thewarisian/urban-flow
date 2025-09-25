@@ -4,6 +4,7 @@ class Graph:
     #Class counter variable to generate numbers for default names of new nodes
     latest_node_num = 1
 
+    #MAGIC METHODS
     def __init__(self):
         #Key: Node name, Value: Set of tuples of the form (str, int or float), where the first element is the connected node name and second is the edge weight.
         self.adjacency_list = {}
@@ -24,19 +25,149 @@ class Graph:
         #Return the iterator of the 'adjacency_list' dict wrapped within the graph object
         return iter(self.adjacency_list)
 
-    def __getitem__(self, key):
+    def __getitem__(self, 
+                    key:str):
         #Access the dictionary around which the graph object is wrapped
         return self.adjacency_list[key]
     
-    def __setitem__(self, key, value):
+    def __setitem__(self, 
+                    key:str, 
+                    value:set):
         #Set key, value pair for dictionary around which the graph object is wrapped
         self.adjacency_list[key] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, 
+                    key:str):
         #Delete the key, value pair from the dictionary around which the graph object is wrapped
         del self.adjacency_list[key]
 
 
+    #GRAPH INFORMATION RETRIEVAL METHODS
+    def get_degree(self, 
+                   node_name:str) -> int:
+        """
+        Retrieves the degree of a node in the graph.
+
+        Parameters
+        ----------
+        node_name : str
+            Name of the node whose degree is needed.
+
+        Returns
+        -------
+        Degree of node (int)
+        """
+        if node_name in self:
+            #Degree is obtained as the length of the adjacecy list linked with the specific node.
+            return len(self[node_name])
+        
+        #Error if node not present in graph
+        raise ValueError(f"Node named {node_name} does not exist in graph.")
+
+    def get_neighbours(self, 
+                       node_name:str) -> list:
+        """
+        Retrieves the adjacency list (list of neighbours) of a node in the graph.
+
+        Parameters
+        ----------
+        node_name : str
+            Name of the node whose list of neighbours is needed.
+
+        Returns
+        -------
+        list : All neighbours of node
+        """
+        if node_name in self:
+            #Set associated as value of key of given node in internal dict is cast to a list
+            return list(self[node_name])
+        
+        #Error if node not present in graph
+        raise ValueError(f"Node named {node_name} does not exist in graph.")
+    
+    def get_all_nodes(self) -> list[str]:
+        """
+        Retrieves the list of all nodes in the graph.
+
+        Parameters
+        ----------
+        No input parameters.
+
+        Returns
+        -------
+        list : All nodes in the graph
+        """
+        #The list of all keys in internal dict is the collection of all nodes in the graph.
+        return list(self.adjacency_list.keys())
+    
+    def get_all_edges(self) -> list[tuple[str, str, Union[int, float, None], bool]]:
+        """
+        Retrieves the list of all edges in the graph.
+
+        Format of Edge Representation
+        ----------
+        (first_node, second_node, edge_weight, is_edge_bidirectional)
+
+        Parameters
+        ----------
+        No input parameters.
+
+        Returns
+        -------
+        list : All edges in the graph in specified tuple format
+        """
+        #Store edges as set to avoid repetition
+        edge_list = set()
+
+        #Iterate over all node-adjacency pairs
+        for first_node in self:
+            for second_node, edge_weight in self[first_node]:
+                #If another edge with same weight exists between the two nodes, but in the opposite direction
+                if (second_node, first_node,edge_weight, False) in edge_list:
+                    #Remove old mention of edge
+                    edge_list.discard((second_node, first_node,edge_weight, False))
+                    #Replace with new mention of edge, having last element for bilateral edge as True
+                    edge_list.add((first_node, second_node, edge_weight, True))
+                else:
+                    #Simply add new edge
+                    edge_list.add((first_node, second_node, edge_weight, False))
+
+        #Cast set to a list
+        return list(edge_list)
+    
+    def edge_exists(self, 
+                    from_node_name:str, 
+                    to_node_name:str,
+                    weight:Union[int, float]=None) -> bool:
+        """
+        Checks if a particular edge exists between two nodes in a graph.
+
+        Parameters
+        ----------
+        from_node_name : str
+            Name of the first node linked by the edge to be searched for.
+        to_node_name : str
+            Name of the second node linked by the edge to be searched for. 
+        weight : int or float
+            Weight assigned to edge to be searched for. Unweighted by default.
+
+        Returns
+        -------
+        True or False
+        """
+        try:
+            #If no weight specified, checks for any edge between given nodes
+            if weight is None:
+                return any(to_node_name == adjacent_node_name for adjacent_node_name, _ in self[from_node_name])
+
+            #Goes over all nodes listed in adjacency list of first node and returns True if second node is found
+            return any((to_node_name, weight) == (adjacent_node_name, adjacent_node_weight) for adjacent_node_name, adjacent_node_weight in self[from_node_name])
+        
+        except KeyError:
+            #Means the node 'from_node_name' doesnt exist in graph
+            return False
+
+    #GRAPH EDITING METHODS
     def add_node(self, 
                  new_node_name:str=None) -> None:
         """
@@ -140,38 +271,6 @@ class Graph:
         #If edge is undirected, the same edge is added to the adjacency list in the reverse direction
         if undirected_edge:
             self[to_node_name].add((from_node_name, weight))
-
-    def edge_exists(self, 
-                    from_node_name:str, 
-                    to_node_name:str,
-                    weight:Union[int, float]=None) -> bool:
-        """
-        Checks if a particular edge exists between two nodes in a graph.
-
-        Parameters
-        ----------
-        from_node_name : str
-            Name of the first node linked by the edge to be searched for.
-        to_node_name : str
-            Name of the second node linked by the edge to be searched for. 
-        weight : int or float
-            Weight assigned to edge to be searched for. Unweighted by default.
-
-        Returns
-        -------
-        True or False
-        """
-        try:
-            #If no weight specified, checks for any edge between given nodes
-            if weight is None:
-                return any(to_node_name == adjacent_node_name for adjacent_node_name, _ in self[from_node_name])
-
-            #Goes over all nodes listed in adjacency list of first node and returns True if second node is found
-            return any((to_node_name, weight) == (adjacent_node_name, adjacent_node_weight) for adjacent_node_name, adjacent_node_weight in self[from_node_name])
-        
-        except KeyError:
-            #Means the node 'from_node_name' doesnt exist in graph
-            return False
 
     def remove_edge(self, 
                     from_node_name:str, 
