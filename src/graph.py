@@ -11,12 +11,6 @@ The graph is stored internally as an adjacency list:
 - Weights may be int, float, or None for unweighted edges.
 - By default, edges are undirected, but directed edges can also be added.
 
-TODO Algorithms built on this implementation:
-- Graph traversal: BFS (breadth-first search), DFS (depth-first search)
-- Pathfinding: Dijkstra's algorithm (weighted shortest paths)
-- Spanning tree: Prim's or Kruskal's algorithm for minimum spanning tree
-- Connectivity checks: is_connected, connected_components
-
 This implementation is intended for use in graph algorithms including traversal, shortest path, and minimum spanning tree.
 """
 
@@ -190,37 +184,56 @@ class Graph:
             return False
 
     #GRAPH EDITING METHODS
-    def add_node(self, 
-                 new_node_name:str=None) -> None:
+    def add_nodes(self, 
+                  *new_nodes:Union[str, int]) -> None:
         """
         Add a new node to the graph.
 
         Parameters
         ----------
-        new_node_name : str
-            Name of the node to add. If no value passed, generates a default name".
+        new_nodes : str or int
+            Name(s) of the node(s) to add. 
+            Or the number of new nodes to be added to the graph, with default names.
+            If multiple ints passed, only first taken.
+            If first argument is an integer, it is assumed to be the number of new nodes with default names
 
         Raises
         ------
         ValueError
-            If a node with `new_node_name` already exists in the graph.
+            If even one node with a name provided in `new_nodes` already exists in the graph.
 
         Returns
         -------
         None
         """
-        #Check to ensure node name doesn't already exist
-        if new_node_name in self:
-            raise ValueError(f"Node named '{new_node_name}' already exists in graph.")
-    
-        elif new_node_name is None:
-            #Dynamic default name generation
-            new_node_name = f"Node {Graph.latest_node_num}"
-            #Update counter for generating default names for new nodes
-            Graph.latest_node_num += 1
+        #Handles case where no arguments passed i.e. tuple is empty
+        if not new_nodes:
+            raise ValueError("At least one node must be provided to add to graph.")
+        
+        #If input is number of new nodes to be added
+        if isinstance(new_nodes[0], int):
+            #Check to ensure zero or negative number of nodes are not added
+            if new_nodes[0] <= 0:
+                raise ValueError("Number of nodes to be added must be positive.")
+        
+            #Adding nodes with default names
+            for _ in range(new_nodes[0]):
+                #Dynamic default name generation
+                name_to_add = f"Node {Graph.latest_node_num}"
+                self[name_to_add] = set()
+                
+                #Update counter for generating default names for new nodes
+                Graph.latest_node_num += 1
+            return
+        
+        #If names for nodes are provided
+        for new_node in new_nodes:
+            #Check to ensure node name doesn't already exist
+            if new_node in self:
+                raise ValueError(f"Node named '{new_node}' already exists in graph.")
             
-        #Add node if not already present
-        self[new_node_name] = set()
+            #Add node if not already present
+            self[new_node] = set()
     
     def delete_node(self, 
                     deleted_node_name:str) -> None:
